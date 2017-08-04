@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.squareup.otto.Subscribe;
 
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.switchBtn)
     Button switchBtn;
     int currentPage = 1;
+
     ArrayList<userItemVo> userItemList = new ArrayList<userItemVo>();
     private Context ctx = null;
     private searchRecyclerAdapter adapter;
@@ -58,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
         ctx = this;
         EventProvider.getInstance().register(this);
         scrollCheck();
-
-
     }
 
 
@@ -80,13 +80,18 @@ public class MainActivity extends AppCompatActivity {
     public void switchB() {
         ArrayList<userItemVo> item;
         search_text.setText("");
-        Intent i = new Intent(ctx, LikeListActivity.class);
-        Bundle bundle = new Bundle();
+
         item = getLikeItem();
-        bundle.putSerializable("userdata", item);
-        Log.v(TAG, "size : " + item.size());
-        i.putExtras(bundle);
-        startActivity(i);
+        if (item.size() != 0) {
+            Intent i = new Intent(ctx, LikeListActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("userdata", item);
+            Log.v(TAG, "size : " + item.size());
+            i.putExtras(bundle);
+            startActivity(i);
+        } else {
+            Toast.makeText(ctx, "no like", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -96,8 +101,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getSearchUserData() {
-
-
+//        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+//        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+//
+//        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+//        httpClient.addInterceptor(logging);  // <-- this is the important line!
+//        Retrofit retrofit_GithubServer = new Retrofit.Builder()
+//                .baseUrl(constValue.GITHUB_URL + constValue.SEARCH)
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .client(httpClient.build())
+//                .build();
+//        GithubApiInfo apiInfo_GithubServer = retrofit_GithubServer.create(GithubApiInfo.class);
         Call<searchUserVo> call = ApplicationClass.apiInfo_GithubServer.searchUser(searchUser, currentPage, 20);
         call.enqueue(new Callback<searchUserVo>() {
             @Override
@@ -109,8 +123,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 totalCount = +response.body().getTotal_count();
                 int size = userItemList.size();
-                Log.e(TAG, "size = " + size);
-                Log.e(TAG, "total count = " + totalCount);
+                Log.i(TAG, "size = " + size);
+                Log.i(TAG, "total count = " + totalCount);
                 currentPage++;
                 setRecyclerView();
             }
@@ -139,17 +153,12 @@ public class MainActivity extends AppCompatActivity {
             result_recyclerView.setItemAnimator(new DefaultItemAnimator());
             result_recyclerView.setAdapter(adapter);
             result_recyclerView.setVisibility(View.VISIBLE);
-//            adapter.setOnItemClickListener(new searchRecyclerAdapter.ClickListener() {
-//                @Override
-//                public void onItemClick(int position, View v) {
-//                    Log.e(TAG, "postion = " + position);
-//                }
-//            });
+
             adapter.setItemClick(new searchRecyclerAdapter.ItemClick() {
                 @Override
                 public void onClick(List<userItemVo> itemsList, int position) {
-                    Log.e(TAG, "position = " + position);
-                    Log.e(TAG, "login  = " + userItemList.get(position).getLogin());
+                    Log.i(TAG, "position = " + position);
+                    Log.i(TAG, "login  = " + userItemList.get(position).getLogin());
                     userItemList.get(position).setLike(true);
                     userItemList.get(position).setPostion(position);
                 }
@@ -158,11 +167,12 @@ public class MainActivity extends AppCompatActivity {
         if (userItemList.size() != 0) {
             result_recyclerView.scrollToPosition(itemTotalCount);
         }
-
         adapter.notifyDataSetChanged();
-
     }
 
+    /**
+     * 스크롤시에 추가 USER DATA 가져옴
+     */
     private void scrollCheck() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(ctx);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -175,13 +185,13 @@ public class MainActivity extends AppCompatActivity {
                 int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
 
                 itemTotalCount = recyclerView.getAdapter().getItemCount() - 1;
-                Log.e(TAG, "lastVisibleItemPosition =" + lastVisibleItemPosition);
+                Log.i(TAG, "lastVisibleItemPosition =" + lastVisibleItemPosition);
                 if (lastVisibleItemPosition != -1) {
                     if (lastVisibleItemPosition == itemTotalCount) {
                         getSearchUserData();
 
                     } else {
-                        Log.e(TAG, "Last Position");
+                        Log.i(TAG, "Last Position");
                     }
                 }
             }
@@ -189,6 +199,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * like item list
+     * @return
+     */
     private ArrayList<userItemVo> getLikeItem() {
         ArrayList<userItemVo> likeItem = new ArrayList<userItemVo>();
         for (userItemVo item : userItemList) {
@@ -197,18 +211,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return likeItem;
-
     }
 
+    /**
+     * like 변경 시 이벤트 수신
+     * @param changeItem
+     */
     @Subscribe
     public void changeLike(EventData changeItem) {
-        Log.e(TAG, "chage Item");
+        Log.i(TAG, "chage Item");
         boolean like = changeItem.getItem().isLike();
         int position = changeItem.getItem().getPostion();
         userItemList.get(position).setLike(like);
         adapter.notifyDataSetChanged();
-
     }
-
-
 }

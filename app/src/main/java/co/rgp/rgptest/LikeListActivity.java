@@ -53,13 +53,10 @@ public class LikeListActivity extends AppCompatActivity {
         search_text.setVisibility(View.GONE);
         swtichbtn.setVisibility(View.GONE);
 
-
         Intent i = getIntent();
         userItemList = (ArrayList<userItemVo>) i.getSerializableExtra("userdata");
-        Log.v(TAG, "size : " + userItemList.size());
+        Log.i(TAG, "size : " + userItemList.size());
         setRecyclerView();
-
-
     }
 
     private void setRecyclerView() {
@@ -73,20 +70,17 @@ public class LikeListActivity extends AppCompatActivity {
         adapter.setItemClick(new likeRecyclerAdapter.ItemClick() {
             @Override
             public void onClick(List<userItemVo> itemsList, int position) {
-                Log.e(TAG,"position = "+position);
-                Log.e(TAG,"login  = "+userItemList.get(position).getLogin());
+                Log.i(TAG,"position = "+position);
+                Log.i(TAG,"login  = "+userItemList.get(position).getLogin());
                 if(userItemList.get(position).isLike()){
                     userItemList.get(position).setLike(false);
                 }else{
                     userItemList.get(position).setLike(true);
                 }
                 EventProvider.getInstance().post(new EventData(userItemList.get(position)));
-
-
                 adapter.notifyDataSetChanged();
             }
         });
         adapter.notifyDataSetChanged();
-
     }
 }

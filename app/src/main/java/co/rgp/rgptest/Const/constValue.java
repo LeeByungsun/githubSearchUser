@@ -5,7 +5,6 @@ package co.rgp.rgptest.Const;
  */
 
 public class constValue {
-
     public static final String GITHUB_URL = "https://api.github.com/";
     public static final String SEARCH = "search/";
     public static final String USER = "users";

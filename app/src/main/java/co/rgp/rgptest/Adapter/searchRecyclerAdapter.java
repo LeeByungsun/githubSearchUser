@@ -36,7 +36,6 @@ public class searchRecyclerAdapter extends RecyclerView.Adapter<searchRecyclerAd
     private ItemClick itemClick;
 
     /**
-     *
      * @param context
      * @param itemsList
      * @param itemLayout
@@ -49,6 +48,7 @@ public class searchRecyclerAdapter extends RecyclerView.Adapter<searchRecyclerAd
 
     /**
      * 아이템 클릭시 실행 함수 등록 함수
+     *
      * @param itemClick
      */
     public void setItemClick(ItemClick itemClick) {
@@ -65,7 +65,7 @@ public class searchRecyclerAdapter extends RecyclerView.Adapter<searchRecyclerAd
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        Log.e(TAG, "onBindViewHolder : " + position);
+        Log.i(TAG, "onBindViewHolder : " + position);
         final userItemVo item = itemsList.get(position);
         boolean likecheck = item.isLike();
         int px;
@@ -120,7 +120,7 @@ public class searchRecyclerAdapter extends RecyclerView.Adapter<searchRecyclerAd
     }
 
     /**
-     *  itemclick interface
+     * itemclick interface
      */
     public interface ItemClick {
         public void onClick(List<userItemVo> itemsList, int position);

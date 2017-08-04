@@ -15,6 +15,4 @@ public interface GithubApiInfo {
     //글 가져오기
     @GET(constValue.USER)
     Call<searchUserVo> searchUser(@Query("q") String user, @Query("page") int page, @Query("per_page") int per_page);
-
-
 }
