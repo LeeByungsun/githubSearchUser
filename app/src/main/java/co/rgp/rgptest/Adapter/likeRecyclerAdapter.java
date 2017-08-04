@@ -11,8 +11,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.LruCache;
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -83,24 +82,11 @@ public class likeRecyclerAdapter extends RecyclerView.Adapter<likeRecyclerAdapte
                 }
             }
         });
-        Picasso picasso = new Picasso.Builder(context)
-                .memoryCache(new LruCache(24000))
-                .build();
         px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 45, context.getResources().getDisplayMetrics());
-        picasso.with(context)
-                .load(avatarUrl)
-                .resize(px, px)
-                .into(holder.avatar,
-                        new com.squareup.picasso.Callback() {
-                            @Override
-                            public void onSuccess() {
-                            }
-
-                            @Override
-                            public void onError() {
-
-                            }
-                        });
+        Glide.with(context).load(avatarUrl)
+                .placeholder(R.mipmap.ic_launcher)
+                .override(px, px)
+                .into(holder.avatar);
     }
 
     /**

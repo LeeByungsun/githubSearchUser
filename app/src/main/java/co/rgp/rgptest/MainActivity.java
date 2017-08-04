@@ -16,6 +16,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.MemoryCategory;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
@@ -60,15 +62,32 @@ public class MainActivity extends AppCompatActivity {
         ctx = this;
         EventProvider.getInstance().register(this);
         scrollCheck();
+        Glide.get(this).setMemoryCategory(MemoryCategory.HIGH);
     }
 
+ 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "total = " + totalCount);
+        Log.i(TAG, "item size = " + userItemList.size());
+        Log.i(TAG, "item size = " + currentPage);
+
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
 
     @OnClick(R.id.search_btn)
     public void search() {
         String user = search_text.getText().toString();
+        search_text.setText("");
         if (user.length() == 0) {
             shakeView(search_text, this);
         } else {
+            userItemList.clear();
+            currentPage = 1;
+            itemTotalCount = 0;
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(search_text.getWindowToken(), 0);
             this.searchUser = user;
@@ -116,17 +135,22 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<searchUserVo>() {
             @Override
             public void onResponse(Call<searchUserVo> call, Response<searchUserVo> response) {
-                if (userItemList.size() == 0) {
-                    userItemList = response.body().getItems();
-                } else {
-                    userItemList.addAll(response.body().getItems());
+                Log.i(TAG, "log = " + response.message());
+                Log.i(TAG, "log = " + response.code());
+                if (response.code() == 200) {
+                    if (userItemList.size() == 0) {
+                        userItemList = response.body().getItems();
+                    } else {
+                        userItemList.addAll(response.body().getItems());
+                    }
+                    totalCount = +response.body().getTotal_count();
+                    int size = userItemList.size();
+                    Log.i(TAG, "size = " + size);
+                    Log.i(TAG, "total count = " + totalCount);
+                    Log.i(TAG, "currentPage = " + currentPage);
+                    currentPage++;
+                    setRecyclerView();
                 }
-                totalCount = +response.body().getTotal_count();
-                int size = userItemList.size();
-                Log.i(TAG, "size = " + size);
-                Log.i(TAG, "total count = " + totalCount);
-                currentPage++;
-                setRecyclerView();
             }
 
             @Override
@@ -147,23 +171,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setRecyclerView() {
-        if (adapter == null) {
-            adapter = new searchRecyclerAdapter(ctx, userItemList, R.layout.user_item);
-            result_recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            result_recyclerView.setItemAnimator(new DefaultItemAnimator());
-            result_recyclerView.setAdapter(adapter);
-            result_recyclerView.setVisibility(View.VISIBLE);
+        adapter = new searchRecyclerAdapter(ctx, userItemList, R.layout.user_item);
+        result_recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        result_recyclerView.setItemAnimator(new DefaultItemAnimator());
+        result_recyclerView.setAdapter(adapter);
+        result_recyclerView.setVisibility(View.VISIBLE);
 
-            adapter.setItemClick(new searchRecyclerAdapter.ItemClick() {
-                @Override
-                public void onClick(List<userItemVo> itemsList, int position) {
-                    Log.i(TAG, "position = " + position);
-                    Log.i(TAG, "login  = " + userItemList.get(position).getLogin());
-                    userItemList.get(position).setLike(true);
-                    userItemList.get(position).setPostion(position);
-                }
-            });
-        }
+        adapter.setItemClick(new searchRecyclerAdapter.ItemClick() {
+            @Override
+            public void onClick(List<userItemVo> itemsList, int position) {
+                Log.i(TAG, "position = " + position);
+                Log.i(TAG, "login  = " + userItemList.get(position).getLogin());
+                userItemList.get(position).setLike(true);
+                userItemList.get(position).setPostion(position);
+            }
+        });
         if (userItemList.size() != 0) {
             result_recyclerView.scrollToPosition(itemTotalCount);
         }
@@ -174,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
      * 스크롤시에 추가 USER DATA 가져옴
      */
     private void scrollCheck() {
+        Log.i(TAG, "scrollCheck  ");
         LinearLayoutManager layoutManager = new LinearLayoutManager(ctx);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         result_recyclerView.setLayoutManager(layoutManager);
@@ -183,13 +206,12 @@ public class MainActivity extends AppCompatActivity {
                 super.onScrolled(recyclerView, dx, dy);
 
                 int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
-
                 itemTotalCount = recyclerView.getAdapter().getItemCount() - 1;
-                Log.i(TAG, "lastVisibleItemPosition =" + lastVisibleItemPosition);
                 if (lastVisibleItemPosition != -1) {
                     if (lastVisibleItemPosition == itemTotalCount) {
-                        getSearchUserData();
-
+                        if (itemTotalCount < totalCount - 1) {
+                            getSearchUserData();
+                        }
                     } else {
                         Log.i(TAG, "Last Position");
                     }
@@ -201,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * like item list
+     *
      * @return
      */
     private ArrayList<userItemVo> getLikeItem() {
@@ -215,6 +238,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * like 변경 시 이벤트 수신
+     *
      * @param changeItem
      */
     @Subscribe

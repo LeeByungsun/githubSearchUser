@@ -14,6 +14,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.MemoryCategory;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +59,7 @@ public class LikeListActivity extends AppCompatActivity {
         Intent i = getIntent();
         userItemList = (ArrayList<userItemVo>) i.getSerializableExtra("userdata");
         Log.i(TAG, "size : " + userItemList.size());
+        Glide.get(this).setMemoryCategory(MemoryCategory.HIGH);
         setRecyclerView();
     }
 
